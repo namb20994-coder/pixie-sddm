@@ -118,18 +118,26 @@ sudo nixos-rebuild switch
 > [!TIP]
 > **First-time build:** Nix will likely report a "hash mismatch" error because of the dummy `sha256` value. Simply copy the **actual hash** from the error message, update it in your config, and run the rebuild command again.
 
+### 4. Manual
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/xCaptaiN09/pixie-sddm.git
+   ```
+2. Copy the folder to SDDM themes directory:
+   ```bash
+   sudo cp -r pixie-sddm /usr/share/sddm/themes/pixie
+   ```
+3. Set the theme in `/etc/sddm.conf`:
+   ```ini
+   [Theme]
+   Current=pixie
+   ```
+
 ---
 
 ## 🛠 Configuration & Testing
 
-### Apply Theme Manually
-If you didn't use the script, set the theme in `/etc/sddm.conf.d/theme.conf`:
-```ini
-[Theme]
-Current=pixie
-```
-
-### Test Without Logging Out
+### Preview Without Logging Out
 Run this command to preview the theme:
 ```bash
 sddm-greeter --test-mode --theme /usr/share/sddm/themes/pixie
