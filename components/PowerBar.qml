@@ -2,7 +2,7 @@
  * Pixie SDDM - PowerBar Component
  * Author: xCaptaiN09
  */
-import QtQuick 2.15
+import QtQuick
 
 Row {
     id: powerBarRoot

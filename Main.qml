@@ -4,10 +4,10 @@
  * Author: xCaptaiN09
  * GitHub: https://github.com/xCaptaiN09/pixie-sddm
  */
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
-import QtGraphicalEffects 1.15
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQuick.Effects
 import "components"
 
 Rectangle {
@@ -86,7 +86,7 @@ Rectangle {
 
     Connections {
         target: sddm
-        onLoginFailed: {
+        function onLoginFailed() {
             container.isLoggingIn = false
             loginTimeout.stop()
             loginState.isError = true
@@ -94,7 +94,7 @@ Rectangle {
             passwordField.text = ""
             passwordField.forceActiveFocus()
         }
-        onLoginSucceeded: {
+        function onLoginSucceeded() {
             loginTimeout.stop()
         }
     }
@@ -184,7 +184,7 @@ Rectangle {
 
     Connections {
         target: backgroundImage
-        onStatusChanged: {
+        function onStatusChanged() {
             if (backgroundImage.status === Image.Ready) {
                 colorExtractor.processed = false;
                 colorDelay.start();
@@ -201,16 +201,20 @@ Rectangle {
         source: config.background
         anchors.fill: parent
         fillMode: Image.PreserveAspectCrop
-        layer.enabled: true
     }
 
-    FastBlur {
+    // High-Quality Standalone Blur (Qt6 Native)
+    MultiEffect {
         id: backgroundBlur
         anchors.fill: parent
         source: backgroundImage
-        radius: 64
-        opacity: loginState.visible ? 1 : 0
+        blurEnabled: true
+        blur: loginState.visible ? 1.0 : 0.0
+        opacity: loginState.visible ? 1.0 : 0.0
+        autoPaddingEnabled: false
+        
         Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.InOutQuad } }
+        Behavior on blur { NumberAnimation { duration: 400; easing.type: Easing.InOutQuad } }
     }
 
     Rectangle {
@@ -375,42 +379,54 @@ Rectangle {
                         }
                     }
 
-                    Image {
-                        id: avatar
+                    // Bulletproof Circular Avatar (Canvas method)
+                    Canvas {
+                        id: avatarCanvas
                         anchors.fill: parent
-                        fillMode: Image.PreserveAspectCrop
-                        smooth: true
-                        visible: false // Hidden because OpacityMask handles the display
-                        
-                        property string userIcon: {
-                            if (typeof userModel !== "undefined" && userModel.count > 0) {
-                                var icon = userModel.data(userModel.index(container.userIndex, 0), Qt.UserRole + 3);
-                                return (icon && icon !== "") ? icon : "assets/avatar.jpg";
-                            }
-                            return "assets/avatar.jpg";
-                        }
-                        
-                        source: userIcon
-                        
-                        onStatusChanged: {
-                            if (status === Image.Error && source != "assets/avatar.jpg") {
-                                source = "assets/avatar.jpg";
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        id: avatarMask
-                        anchors.fill: parent
-                        radius: width / 2
-                        visible: false
-                    }
-
-                    OpacityMask {
-                        anchors.fill: parent
-                        source: avatar
-                        maskSource: avatarMask
                         visible: avatar.status === Image.Ready
+                        
+                        onPaint: {
+                            var ctx = getContext("2d");
+                            ctx.reset();
+                            ctx.beginPath();
+                            ctx.arc(width/2, height/2, width/2, 0, 2 * Math.PI);
+                            ctx.closePath();
+                            ctx.clip();
+                            ctx.drawImage(avatar, 0, 0, width, height);
+                            console.log("Pixie SDDM: Canvas draw complete.");
+                        }
+
+                        Timer {
+                            id: repaintTimer
+                            interval: 500
+                            onTriggered: avatarCanvas.requestPaint()
+                        }
+
+                        Image {
+                            id: avatar
+                            anchors.fill: parent
+                            fillMode: Image.PreserveAspectCrop
+                            smooth: true
+                            visible: false
+                            
+                            Component.onCompleted: {
+                                var s = Qt.resolvedUrl("assets/avatar.jpg");
+                                if (typeof userModel !== "undefined" && userModel.count > 0) {
+                                    var icon = userModel.data(userModel.index(container.userIndex, 0), Qt.UserRole + 3);
+                                    if (icon && icon.toString().match(/\.(jpg|jpeg|png|bmp|webp|svg)$/i)) {
+                                        s = icon.toString();
+                                    }
+                                }
+                                source = s;
+                            }
+                            
+                            onStatusChanged: {
+                                if (status === Image.Ready) {
+                                    console.log("Pixie SDDM: Image ready, repainting Canvas.");
+                                    repaintTimer.start();
+                                }
+                            }
+                        }
                     }
                 }
 

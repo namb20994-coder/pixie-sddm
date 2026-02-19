@@ -8,4 +8,5 @@ Type=sddm-theme
 Version=2.0
 MainScript=Main.qml
 Screenshot=screenshot.png
+QtVersion=6
 X-SDDM-Theme-InterfaceVersion=2

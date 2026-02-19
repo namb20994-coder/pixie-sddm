@@ -2,7 +2,7 @@
  * Pixie SDDM - Clock Component
  * Author: xCaptaiN09
  */
-import QtQuick 2.15
+import QtQuick
 
 Item {
 
@@ -129,16 +129,13 @@ Item {
 
 
     Row {
-
         anchors.centerIn: parent
-
-        spacing: 0
-
+        spacing: 0 // Resetting horizontal gap
  // Adjust this for horizontal gap between HH and mm columns
 
         // First Column: Tens digit of Hour over Tens digit of Minute
         Column {
-            spacing: -45 // Overlap to match Pixel look
+            spacing: -130 // Ultra-compact vertical overlap
             Text {
                 text: clock.timeStr.charAt(0)
                 color: clock.smartHoursColor
@@ -163,7 +160,7 @@ Item {
 
         // Second Column: Ones digit of Hour over Ones digit of Minute
         Column {
-            spacing: -45
+            spacing: -130
             Text {
                 text: clock.timeStr.charAt(1)
                 color: clock.smartHoursColor

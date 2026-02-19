@@ -27,21 +27,15 @@ A clean, modern, and minimal SDDM theme inspired by Google Pixel UI and Material
 
 ## 📦 Prerequisites
 
-Before installing, you **must** install the required Qt5 modules for your distribution to avoid a black screen:
+Pixie SDDM is now a **Professional Qt6 Theme**, optimized for modern, bleeding-edge distributions (Fedora 40+, Arch Linux, NixOS, etc.). 
+
+To avoid a black screen, ensure you have the required Qt6 modules installed:
 
 <details>
 <summary><b>Arch Linux / CachyOS / Manjaro</b> (Click to expand)</summary>
 
 ```bash
-sudo pacman -S --needed qt5-graphicaleffects qt5-quickcontrols2 qt5-svg
-```
-</details>
-
-<details>
-<summary><b>Ubuntu / Debian / Mint / Kali</b> (Click to expand)</summary>
-
-```bash
-sudo apt update && sudo apt install qml-module-qtgraphicaleffects qml-module-qtquick-controls2 qml-module-qtquick-layouts libqt5svg5
+sudo pacman -S --needed qt6-declarative qt6-svg qt6-quickcontrols2 qt6-effects
 ```
 </details>
 
@@ -49,7 +43,7 @@ sudo apt update && sudo apt install qml-module-qtgraphicaleffects qml-module-qtq
 <summary><b>Fedora / RHEL / CentOS</b> (Click to expand)</summary>
 
 ```bash
-sudo dnf install qt5-qtgraphicaleffects qt5-qtquickcontrols2 qt5-qtsvg
+sudo dnf install qt6-qtdeclarative qt6-qtsvg qt6-qtquickcontrols2 qt6-qteffects
 ```
 </details>
 
@@ -57,7 +51,15 @@ sudo dnf install qt5-qtgraphicaleffects qt5-qtquickcontrols2 qt5-qtsvg
 <summary><b>openSUSE</b> (Click to expand)</summary>
 
 ```bash
-sudo zypper install libqt5-qtgraphicaleffects libqt5-qtquickcontrols2 libqt5-qtsvg
+sudo zypper install qt6-declarative qt6-svg qt6-quickcontrols2 qt6-effects
+```
+</details>
+
+<details>
+<summary><b>Ubuntu 24.10+ / Debian Trixie</b> (Click to expand)</summary>
+
+```bash
+sudo apt update && sudo apt install qml6-module-qtquick-controls qml6-module-qtquick-layouts qml6-module-qtquick-effects libqt6svg6
 ```
 </details>
 
@@ -103,9 +105,10 @@ NixOS users should add the following snippet to their `/etc/nixos/configuration.
         cp -r * $out/share/sddm/themes/pixie/
       '';
     })
-    pkgs.libsForQt5.qtgraphicaleffects
-    pkgs.libsForQt5.qtquickcontrols2
-    pkgs.libsForQt5.qtsvg
+    pkgs.kdePackages.qtdeclarative
+    pkgs.kdePackages.qtquickcontrols2
+    pkgs.kdePackages.qtsvg
+    pkgs.kdePackages.qteffects
   ];
 }
 ```
