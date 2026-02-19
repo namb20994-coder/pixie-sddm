@@ -1,6 +1,6 @@
 # ✨ Pixie SDDM
 
-A clean, modern, and minimal SDDM theme inspired by Google Pixel UI and Material Design 3. 
+A clean, modern, and minimal SDDM theme inspired by Google Pixel UI and Material Design 3. Supports both the latest **Qt6** engine and legacy **Qt5** systems.
 
 <div align="center">
   <img src="screenshots/lock_screen.png" width="45%" alt="Lock Screen" />
@@ -18,48 +18,20 @@ A clean, modern, and minimal SDDM theme inspired by Google Pixel UI and Material
 
 - **Pixel Aesthetic:** Clean typography and a unique two-tone stacked clock.
 - **Material You Dynamic Colors:** Intelligent color extraction that samples your wallpaper for UI accents.
-- **Smooth Transitions:** High-performance fade-in animations for all UI elements.
+- **Next-Gen Blur:** High-performance Gaussian blur (Qt6) and custom shader blur (Qt5).
+- **Universal Circle Avatar:** A bulletproof, anti-aliased circular profile mask that works on all systems.
 - **Material Design 3:** Dark card UI with smooth interactions and responsive dropdowns.
 - **Keyboard Navigation:** Full support for navigating menus with arrows and `Enter`.
-- **Blur Effects:** Adaptive background blur that transitions smoothly when the login card is active.
 
 ---
 
-## 📦 Installation & Versioning
+## 🛠 1. Prerequisites (Essential)
 
-Pixie SDDM now supports both the latest **Qt6** engine and the legacy **Qt5** engine.
+Before installing, ensure you have the required modules for your system version to avoid a black screen:
 
-| System Type | Engine | Recommended Branch |
-| :--- | :--- | :--- |
-| **Bleeding Edge** (Fedora 40+, Arch, Nix, Cachy) | **Qt6** | `main` (Default) |
-| **Stable/LTS** (Ubuntu 22.04/24.04, Debian 12) | **Qt5** | `qt5` |
-
-### 1. Automatic Script (Recommended)
-This script detects your system and installs the theme.
-```bash
-git clone https://github.com/xCaptaiN09/pixie-sddm.git
-cd pixie-sddm
-
-# OPTIONAL: If you are on an older Qt5 system (Ubuntu/Debian):
-# git checkout qt5
-
-sudo ./install.sh
-```
-
-### 2. Arch Linux (AUR)
-The AUR package automatically tracks the latest version:
-```bash
-yay -S pixie-sddm-git
-```
-
----
-
-## 🛠 Prerequisites
-
-Ensure you have the required modules for your version:
-
-<details>
-<summary><b>Qt6 (Default / Main Branch)</b></summary>
+<details open>
+<summary><b>Qt6 (Default / Modern Distros)</b></summary>
+Recommended for Fedora 40+, Arch Linux, CachyOS, NixOS.
 
 ```bash
 # Arch: sudo pacman -S qt6-declarative qt6-svg qt6-quickcontrols2
@@ -68,7 +40,8 @@ Ensure you have the required modules for your version:
 </details>
 
 <details>
-<summary><b>Qt5 (Legacy / qt5 Branch)</b></summary>
+<summary><b>Qt5 (Legacy / Stable Distros)</b></summary>
+Required for Ubuntu 22.04/24.04, Debian 12, Linux Mint.
 
 ```bash
 # Ubuntu: sudo apt install qml-module-qtgraphicaleffects qml-module-qtquick-controls2
@@ -76,10 +49,33 @@ Ensure you have the required modules for your version:
 ```
 </details>
 
-### 3. NixOS (Declarative)
-NixOS users should add the following to their `configuration.nix`. 
+---
 
-**Note:** This snippet uses the **Qt6** version. For **Qt5**, change `rev = "main"` to `rev = "qt5"` and use `pkgs.libsForQt5` packages.
+## 📦 2. Installation
+
+Pixie SDDM automatically detects your system and installs the correct version.
+
+| System Type | Engine | Recommended Branch |
+| :--- | :--- | :--- |
+| **Bleeding Edge** (Fedora, Arch, Nix) | **Qt6** | `main` (Default) |
+| **Stable/LTS** (Ubuntu, Debian) | **Qt5** | `qt5` |
+
+### Method A: Automatic Script (Recommended)
+This script intelligently detects your Qt version and handles everything:
+```bash
+git clone https://github.com/xCaptaiN09/pixie-sddm.git
+cd pixie-sddm
+sudo ./install.sh
+```
+
+### Method B: Arch Linux (AUR)
+The AUR package automatically tracks the latest modern version:
+```bash
+yay -S pixie-sddm-git
+```
+
+### Method C: NixOS (Declarative)
+Add the following to your `configuration.nix`. (Change `rev = "main"` to `rev = "qt5"` for legacy systems).
 
 ```nix
 { pkgs, ... }: {
@@ -94,7 +90,7 @@ NixOS users should add the following to their `configuration.nix`.
       src = pkgs.fetchFromGitHub {
         owner = "xCaptaiN09";
         repo = "pixie-sddm";
-        rev = "main"; # Change to "qt5" for legacy systems
+        rev = "main";
         sha256 = "sha256-0000000000000000000000000000000000000000000=";
       };
       installPhase = ''
@@ -110,24 +106,10 @@ NixOS users should add the following to their `configuration.nix`.
 }
 ```
 
-After editing, apply the configuration by running:
-```bash
-sudo nixos-rebuild switch
-```
-
-> [!TIP]
-> **First-time build:** Nix will likely report a "hash mismatch" error because of the dummy `sha256` value. Simply copy the **actual hash** from the error message, update it in your config, and run the rebuild command again.
-
-### 4. Manual
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/xCaptaiN09/pixie-sddm.git
-   ```
-2. Copy the folder to SDDM themes directory:
-   ```bash
-   sudo cp -r pixie-sddm /usr/share/sddm/themes/pixie
-   ```
-3. Set the theme in `/etc/sddm.conf`:
+### Method D: Manual
+1. Copy the folder to SDDM themes directory:
+   `sudo cp -r pixie-sddm /usr/share/sddm/themes/pixie`
+2. Set the theme in `/etc/sddm.conf`:
    ```ini
    [Theme]
    Current=pixie
@@ -138,19 +120,19 @@ sudo nixos-rebuild switch
 ## 🛠 Configuration & Testing
 
 ### Preview Without Logging Out
-Run this command to preview the theme:
+Run this command to preview the theme safely:
 ```bash
+# For Qt6 (Modern):
+sddm-greeter-qt6 --test-mode --theme /usr/share/sddm/themes/pixie
+
+# For Qt5 (Legacy):
 sddm-greeter --test-mode --theme /usr/share/sddm/themes/pixie
 ```
 
----
-
-## 🎨 Customization
-
-Edit the `theme.conf` file inside the theme directory:
-- **Wallpaper:** Replace `assets/background.jpg` with your own image.
-- **Avatar:** Put your profile picture in `assets/avatar.jpg`.
-- **Colors:** Adjust `accentColor` for manual overrides if needed.
+### Customization
+Edit `theme.conf` or replace assets in `assets/`:
+- **Wallpaper:** Replace `assets/background.jpg`.
+- **Avatar:** Replace `assets/avatar.jpg`.
 
 ## 🤝 Credits
 
