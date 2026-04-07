@@ -494,6 +494,7 @@ Rectangle {
                         spacing: 8
                         Text { 
                             text: "󰟀" 
+                            font.family: "Material Design Icons"
                             color: container.extractedAccent
                             font.pixelSize: 16
                         }
