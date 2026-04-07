@@ -55,6 +55,7 @@ Row {
     // Suspend
     Text {
         text: "󰤄"
+        font.family: "Material Design Icons"
         color: textColor
         font.pixelSize: 20
         anchors.verticalCenter: parent.verticalCenter
@@ -67,6 +68,7 @@ Row {
     // Restart
     Text {
         text: "󰑐"
+        font.family: "Material Design Icons"
         color: textColor
         font.pixelSize: 20
         anchors.verticalCenter: parent.verticalCenter
@@ -79,6 +81,7 @@ Row {
     // Shutdown
     Text {
         text: "󰐥"
+        font.family: "Material Design Icons"
         color: textColor
         font.pixelSize: 20
         anchors.verticalCenter: parent.verticalCenter
