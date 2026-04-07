@@ -151,7 +151,7 @@ Edit `theme.conf` or replace assets in `assets/`:
 
 - **Author:** [xCaptaiN09](https://github.com/xCaptaiN09)
 - **Design:** Inspired by Google Pixel and MD3.
-- **Font:** Google Sans Flex (included).
+- **Font:** Google Sans Flex and Google Material Design Icons (included).
 
 ---
 *Made with ❤️ for the Linux community.*
