@@ -70,11 +70,14 @@ if [ -d "assets/fonts" ] && [ "$(ls -A assets/fonts/*.ttf 2>/dev/null)" ]; then
     echo -e "${BLUE}==>${NC} Installing theme fonts..."
     mkdir -p "$FONT_DEST"
     cp assets/fonts/*.ttf "$FONT_DEST/"
-    fc-cache -f "$FONT_DEST"
+    chmod 755 "$FONT_DEST"
+    chmod 644 "$FONT_DEST"/*.ttf
+    if command -v fc-cache >/dev/null 2>&1; then
+        fc-cache -f "$FONT_DEST"
+    fi
 else
     echo -e "${YELLOW}==>${NC} No fonts found in assets/fonts, skipping..."
 fi
-chmod -R 755 "$FONT_DEST"
 
 # 6. CONFIGURATION
 echo -e ""
