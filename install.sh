@@ -7,6 +7,7 @@ set -e
 
 THEME_NAME="pixie"
 THEME_DIR="/usr/share/sddm/themes/${THEME_NAME}"
+FONT_DEST="/usr/share/fonts/${THEME_NAME}-fonts"
 
 # Colors
 GREEN='\033[0;32m'
@@ -64,7 +65,16 @@ mkdir -p "${THEME_DIR}"
 cp -r assets components Main.qml metadata.desktop theme.conf LICENSE "${THEME_DIR}/"
 chmod -R 755 "${THEME_DIR}"
 
-echo -e "${GREEN}Done!${NC} Pixie SDDM is now installed."
+# 5.1. FONT INSTALLATION
+if [ -d "assets/fonts" ] && [ "$(ls -A assets/fonts/*.ttf 2>/dev/null)" ]; then
+    echo -e "${BLUE}==>${NC} Installing theme fonts..."
+    mkdir -p "$FONT_DEST"
+    cp assets/fonts/*.ttf "$FONT_DEST/"
+    fc-cache -f "$FONT_DEST"
+else
+    echo -e "${YELLOW}==>${NC} No fonts found in assets/fonts, skipping..."
+fi
+chmod -R 755 "$FONT_DEST"
 
 # 6. CONFIGURATION
 echo -e ""
