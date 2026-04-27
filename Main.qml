@@ -39,34 +39,34 @@ Rectangle {
 
     function doLogin() {
         if (!loginState.visible || isLoggingIn) return;
-        
+
         var user = "";
         if (typeof userModel !== "undefined" && userModel.count > 0) {
             var idx = container.userIndex;
             if (idx < 0 || idx >= userModel.count) idx = 0;
-            
+
             var edit = userModel.data(userModel.index(idx, 0), Qt.EditRole);
             var nameRole = userModel.data(userModel.index(idx, 0), Qt.UserRole + 1);
             var display = userModel.data(userModel.index(idx, 0), Qt.DisplayRole);
-            
+
             user = edit ? edit.toString() : (nameRole ? nameRole.toString() : (display ? display.toString() : ""));
         }
-        
+
         if (!user || user === "" || user === "User") {
             user = sddm.lastUser;
         }
-        
+
         if (!user && typeof userModel !== "undefined" && userModel.count > 0) {
             var firstEdit = userModel.data(userModel.index(0, 0), Qt.EditRole);
             user = firstEdit ? firstEdit.toString() : "";
         }
-        
+
         if (!user) return;
 
         container.isLoggingIn = true;
         var pass = passwordField.text;
         var sess = container.sessionIndex;
-        
+
         if (typeof sessionModel !== "undefined") {
             if (sess < 0 || sess >= sessionModel.count) sess = 0;
         } else {
@@ -99,14 +99,17 @@ Rectangle {
         }
     }
 
-    // Dynamic Color Extraction
-    property color extractedAccent: "#A9C78F"
-    
+    // Dynamic Color Configuration
+    property color extractedAccent: config.accentColor
+    property color baseColor: config.backgroundColor
+    property color surfaceColor: Qt.lighter(baseColor, 1.3)
+    property color surfaceVariantColor: Qt.lighter(baseColor, 1.6)
+
     Timer {
         id: colorDelay
         interval: 1000 // Give it a full second
         repeat: true   // Keep trying until we succeed
-        running: backgroundImage.status === Image.Ready && !colorExtractor.processed
+        running: backgroundImage.status === Image.Ready && !colorExtractor.processed && config.autoColor === "true"
         onTriggered: colorExtractor.requestPaint()
     }
 
@@ -117,49 +120,49 @@ Rectangle {
         z: -1
         renderTarget: Canvas.Image
         property bool processed: false
-        
+
         onPaint: {
             var ctx = getContext("2d");
             var res = 60;
             ctx.clearRect(0, 0, res, res);
             ctx.drawImage(backgroundImage, 0, 0, res, res);
             var imgData = ctx.getImageData(0, 0, res, res).data;
-            
+
             if (!imgData || imgData.length === 0) return;
 
             // 36 Buckets (10 degrees each) for high resolution hue detection
             var histogram = new Array(36).fill(0);
             var sampleColors = new Array(36).fill(null);
             var vibrantFound = false;
-            
+
             for (var i = 0; i < imgData.length; i += 4) {
                 var r = imgData[i] / 255;
                 var g = imgData[i+1] / 255;
                 var b = imgData[i+2] / 255;
                 var pCol = Qt.rgba(r, g, b, 1.0);
-                
+
                 // Filter: Must be colorful and not too dark
                 if (pCol.hsvSaturation > 0.3 && pCol.hsvValue > 0.25) {
                     var h = pCol.hsvHue * 360;
                     if (h < 0) continue;
-                    
+
                     var bIdx = Math.floor(h / 10) % 36;
                     // Weight: Focus on saturation to find the "intended" accent
                     var weight = pCol.hsvSaturation * pCol.hsvValue;
                     histogram[bIdx] += weight;
-                    
+
                     if (!sampleColors[bIdx] || weight > (sampleColors[bIdx].hsvSaturation * sampleColors[bIdx].hsvValue)) {
                         sampleColors[bIdx] = pCol;
                     }
                     vibrantFound = true;
                 }
             }
-            
+
             if (!vibrantFound) return; // Keep trying
 
             // Merge Red wrap (350-360 and 0-10)
             histogram[0] += histogram[35];
-            
+
             // Find the most frequent vibrant hue (The Mode)
             var maxCount = -1;
             var winnerIdx = -1;
@@ -169,7 +172,7 @@ Rectangle {
                     winnerIdx = j;
                 }
             }
-            
+
             if (winnerIdx !== -1 && sampleColors[winnerIdx]) {
                 var finalColor = sampleColors[winnerIdx];
                 var h = finalColor.hsvHue;
@@ -212,7 +215,7 @@ Rectangle {
         blur: loginState.visible ? 1.0 : 0.0
         opacity: loginState.visible ? 1.0 : 0.0
         autoPaddingEnabled: false
-        
+
         Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.InOutQuad } }
         Behavior on blur { NumberAnimation { duration: 400; easing.type: Easing.InOutQuad } }
     }
@@ -286,7 +289,7 @@ Rectangle {
             opacity: colorExtractor.processed ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 300 } }
         }
-        
+
         Text {
             text: "Press any key to unlock"
             color: config.textColor
@@ -336,10 +339,10 @@ Rectangle {
             height: 480
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
-            color: loginState.isError ? "#442222" : "#1A1C18"
+            color: loginState.isError ? "#442222" : baseColor
             opacity: 0.7
             radius: 32
-            
+
             Behavior on color { ColorAnimation { duration: 200 } }
 
             ColumnLayout {
@@ -351,14 +354,14 @@ Rectangle {
                     Layout.preferredWidth: 120
                     Layout.preferredHeight: 120
                     Layout.alignment: Qt.AlignHCenter
-                    
+
                     Rectangle {
                         id: avatarFallback
                         anchors.fill: parent
-                        color: "#2D2F27"
+                        color: surfaceColor
                         radius: width / 2
                         visible: avatar.status !== Image.Ready
-                        
+
                         Text {
                             anchors.centerIn: parent
                             text: {
@@ -384,7 +387,7 @@ Rectangle {
                         id: avatarCanvas
                         anchors.fill: parent
                         visible: avatar.status === Image.Ready
-                        
+
                         onPaint: {
                             var ctx = getContext("2d");
                             ctx.reset();
@@ -408,7 +411,7 @@ Rectangle {
                             fillMode: Image.PreserveAspectCrop
                             smooth: true
                             visible: false
-                            
+
                             Component.onCompleted: {
                                 var s = Qt.resolvedUrl("assets/avatar.jpg");
                                 if (typeof userModel !== "undefined" && userModel.count > 0) {
@@ -419,7 +422,7 @@ Rectangle {
                                 }
                                 source = s;
                             }
-                            
+
                             onStatusChanged: {
                                 if (status === Image.Ready) {
                                     console.log("Pixie SDDM: Image ready, repainting Canvas.");
@@ -435,7 +438,7 @@ Rectangle {
                     Layout.preferredWidth: userNameLabel.width + 40
                     Layout.preferredHeight: userNameLabel.height + 20
                     Layout.topMargin: 10
-                    
+
                     Rectangle {
                         anchors.fill: parent
                         color: "white"
@@ -471,7 +474,7 @@ Rectangle {
                         anchors.fill: parent
                         onClicked: userPopup.open()
                     }
-                    
+
                     scale: userClickArea.pressed ? 0.95 : 1.0
                     Behavior on scale { NumberAnimation { duration: 100 } }
                 }
@@ -481,19 +484,19 @@ Rectangle {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.preferredWidth: 180
                     Layout.preferredHeight: 36
-                    color: (sessionClickArea.pressed || sessionPopup.opened) ? "#3D3F37" : "#2D2F27"
+                    color: (sessionClickArea.pressed || sessionPopup.opened) ? surfaceVariantColor : surfaceColor
                     radius: 18
                     border.width: 1
-                    border.color: (sessionClickArea.pressed || sessionPopup.opened) ? container.extractedAccent : "#3D3F37"
-                    
+                    border.color: (sessionClickArea.pressed || sessionPopup.opened) ? container.extractedAccent : surfaceVariantColor
+
                     scale: sessionClickArea.pressed ? 0.95 : 1.0
                     Behavior on scale { NumberAnimation { duration: 100 } }
 
                     RowLayout {
                         anchors.centerIn: parent
                         spacing: 8
-                        Text { 
-                            text: "󰟀" 
+                        Text {
+                            text: "󰟀"
                             color: container.extractedAccent
                             font.pixelSize: 16
                         }
@@ -534,15 +537,15 @@ Rectangle {
                     color: "white"
                     focus: loginState.visible
                     enabled: !container.isLoggingIn
-                    
+
                     background: Rectangle {
-                        color: "#2D2F27"
+                        color: surfaceColor
                         radius: 16
                         border.width: parent.activeFocus ? 2 : 0
                         border.color: container.extractedAccent
                         opacity: parent.enabled ? 1.0 : 0.5
                     }
-                    
+
                     Text {
                         text: "Enter Password"
                         color: "gray"
@@ -580,7 +583,7 @@ Rectangle {
                     Layout.preferredHeight: 64
                     focusPolicy: Qt.NoFocus
                     enabled: !container.isLoggingIn
-                    
+
                     contentItem: Text {
                         text: container.isLoggingIn ? "⋯" : "→"
                         color: "white"
@@ -590,7 +593,7 @@ Rectangle {
                     }
 
                     background: Rectangle {
-                        color: container.isLoggingIn ? "#3D3F37" : (loginButton.pressed ? Qt.darker(container.extractedAccent, 1.1) : container.extractedAccent)
+                        color: container.isLoggingIn ? surfaceVariantColor : (loginButton.pressed ? Qt.darker(container.extractedAccent, 1.1) : container.extractedAccent)
                         radius: 32
                         opacity: container.isLoggingIn ? 0.5 : 1.0
                     }
@@ -619,13 +622,13 @@ Rectangle {
         y: (parent.height - height) / 2 - 50
         modal: true
         focus: true
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside 
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
         onOpened: userList.forceActiveFocus()
         background: Rectangle {
-            color: "#1A1C18"
+            color: baseColor
             radius: 24
             opacity: 0.95
-            border.color: "#3D3F37"
+            border.color: surfaceVariantColor
             border.width: 1
         }
         enter: Transition { NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 200 } }
@@ -645,7 +648,7 @@ Rectangle {
                 height: 40
                 property bool isCurrent: index === userList.currentIndex
                 background: Rectangle {
-                    color: isCurrent ? "#3D3F37" : (hovered ? "#2D2F27" : "transparent")
+                    color: isCurrent ? surfaceVariantColor : (hovered ? surfaceColor : "transparent")
                     radius: 12
                     Rectangle {
                         anchors.left: parent.left
@@ -666,7 +669,7 @@ Rectangle {
                         Layout.preferredWidth: 28
                         Layout.preferredHeight: 28
                         Layout.alignment: Qt.AlignVCenter
-                        color: isCurrent ? container.extractedAccent : "#3D3F37"
+                        color: isCurrent ? container.extractedAccent : surfaceVariantColor
                         radius: 14
                         Text {
                             anchors.centerIn: parent
@@ -677,7 +680,7 @@ Rectangle {
                                 var finalVal = d ? d.toString() : (n_r ? n_r.toString() : "U");
                                 return finalVal.charAt(0).toUpperCase();
                             }
-                            color: isCurrent ? "#1A1C18" : "white"
+                            color: isCurrent ? baseColor : "white"
                             font.pixelSize: 12
                             font.family: fontBold.name
                             font.weight: Font.Bold
@@ -726,10 +729,10 @@ Rectangle {
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
         onOpened: sessionList.forceActiveFocus()
         background: Rectangle {
-            color: "#1A1C18"
+            color: baseColor
             radius: 24
             opacity: 0.95
-            border.color: "#3D3F37"
+            border.color: surfaceVariantColor
             border.width: 1
         }
         enter: Transition { NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 200 } }
@@ -749,7 +752,7 @@ Rectangle {
                 height: 40
                 property bool isCurrent: index === sessionList.currentIndex
                 background: Rectangle {
-                    color: isCurrent ? "#3D3F37" : (hovered ? "#2D2F27" : "transparent")
+                    color: isCurrent ? surfaceVariantColor : (hovered ? surfaceColor : "transparent")
                     radius: 12
                     Rectangle {
                         anchors.left: parent.left
@@ -766,7 +769,7 @@ Rectangle {
                     anchors.fill: parent
                     spacing: 0
                     Item { Layout.preferredWidth: 20 }
-                    Text { 
+                    Text {
                         Layout.preferredWidth: 40
                         text: "󰟀"
                         color: isCurrent ? container.extractedAccent : "gray"
