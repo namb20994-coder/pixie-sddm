@@ -90,11 +90,22 @@ yay -S pixie-sddm-git
 ### Method C: NixOS (Declarative)
 Add the following to your `configuration.nix`. (Change `rev = "main"` to `rev = "qt5"` for legacy systems).
 
+> **Note for Qt6:** If you are using the `main` (Qt6) branch, you **must** use `pkgs.kdePackages.sddm` to ensure the Qt6 platform plugins load correctly. Without this, your mouse cursor may not appear.
+
 ```nix
 { pkgs, ... }: {
   services.displayManager.sddm = {
     enable = true;
     theme = "pixie";
+    # Crucial for Qt6: Use the KDE/Qt6 build of SDDM to fix missing cursors and module errors
+    package = pkgs.kdePackages.sddm; 
+    
+    # Fix for NixOS explicitly requiring a cursor theme
+    settings = {
+      Theme = {
+        CursorTheme = "breeze_cursors"; # Change this if you use a different cursor theme (e.g., Adwaita)
+      };
+    };
   };
 
   environment.systemPackages = [
@@ -106,15 +117,15 @@ Add the following to your `configuration.nix`. (Change `rev = "main"` to `rev = 
         rev = "main";
         sha256 = "sha256-0000000000000000000000000000000000000000000=";
       };
-      installPhase = ''
+      installPhase = "
         mkdir -p $out/share/sddm/themes/pixie
         cp -r * $out/share/sddm/themes/pixie/
-      '';
+      ";
     })
+    # Correct Qt6 dependencies for NixOS
     pkgs.kdePackages.qtdeclarative
-    pkgs.kdePackages.qtquickcontrols2
     pkgs.kdePackages.qtsvg
-    pkgs.kdePackages.qteffects
+    pkgs.kdePackages.qt5compat # Included for wider QML component compatibility
   ];
 }
 ```
