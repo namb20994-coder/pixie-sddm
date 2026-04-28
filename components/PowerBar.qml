@@ -8,17 +8,19 @@ Row {
     id: powerBarRoot
     spacing: 20
     height: 30
-    
+
     property color textColor: "white"
+
+    // Load the icon font locally so we don't need system-wide installation
+    FontLoader { id: iconFont; source: "../assets/fonts/MaterialDesignIcons.ttf" }
 
     // Battery
     Row {
         id: batteryRow
         spacing: 5
-        // Show if battery object exists and reports a valid percentage
         visible: typeof battery !== "undefined" && battery.percent !== undefined
         anchors.verticalCenter: parent.verticalCenter
-        
+
         Text {
             id: batteryText
             text: (typeof battery !== "undefined" ? battery.percent : "0") + "%"
@@ -31,6 +33,7 @@ Row {
             text: (typeof battery !== "undefined" && battery.charging) ? "󱐋" : "󰁹"
             color: textColor
             font.pixelSize: 18
+            font.family: iconFont.name // Apply the loaded font here!
             anchors.verticalCenter: parent.verticalCenter
         }
     }
@@ -43,7 +46,7 @@ Row {
         font.capitalization: Font.AllUppercase
         visible: typeof keyboard !== "undefined" && keyboard.layouts.length > 1
         anchors.verticalCenter: parent.verticalCenter
-        
+
         MouseArea {
             anchors.fill: parent
             onClicked: {
@@ -57,6 +60,7 @@ Row {
         text: "󰤄"
         color: textColor
         font.pixelSize: 20
+        font.family: iconFont.name // Apply the loaded font here!
         anchors.verticalCenter: parent.verticalCenter
         MouseArea {
             anchors.fill: parent
@@ -69,6 +73,7 @@ Row {
         text: "󰑐"
         color: textColor
         font.pixelSize: 20
+        font.family: iconFont.name // Apply the loaded font here!
         anchors.verticalCenter: parent.verticalCenter
         MouseArea {
             anchors.fill: parent
@@ -81,6 +86,7 @@ Row {
         text: "󰐥"
         color: textColor
         font.pixelSize: 20
+        font.family: iconFont.name // Apply the loaded font here!
         anchors.verticalCenter: parent.verticalCenter
         MouseArea {
             anchors.fill: parent

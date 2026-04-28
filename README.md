@@ -166,7 +166,7 @@ Edit `theme.conf` or replace assets in `assets/`:
 
 - **Author:** [xCaptaiN09](https://github.com/xCaptaiN09)
 - **Design:** Inspired by Google Pixel and MD3.
-- **Font:** Flex Rounded (included).
+- **Font:** Flex Rounded & Material Design Icons (included).
 
 ---
 *Made with ❤️ for the Linux community.*
