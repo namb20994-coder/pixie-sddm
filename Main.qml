@@ -270,7 +270,7 @@ Rectangle {
         }
         textColor: container.extractedAccent
         z: 100
-        opacity: colorExtractor.processed ? 1 : 0
+        opacity: container.uiReady ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 300 } }
     }
 
@@ -303,7 +303,7 @@ Rectangle {
             topMargin: 50
             leftMargin: 60
         }
-        opacity: colorExtractor.processed ? 1 : 0
+        opacity: container.uiReady ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 300 } }
     }
 
@@ -320,7 +320,7 @@ Rectangle {
             backgroundSource: config.background
             baseAccent: container.extractedAccent
             fontFamily: fontRegular.name
-            opacity: colorExtractor.processed ? 1 : 0
+            opacity: container.uiReady ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 300 } }
         }
 

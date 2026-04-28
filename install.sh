@@ -78,6 +78,10 @@ if [ -f "${BACKUP_DIR}/theme.conf" ]; then
     cp "${BACKUP_DIR}/theme.conf" "${THEME_DIR}/theme.conf"
     [ -f "${BACKUP_DIR}/background.jpg" ] && cp "${BACKUP_DIR}/background.jpg" "${THEME_DIR}/assets/background.jpg"
     [ -f "${BACKUP_DIR}/avatar.jpg" ] && cp "${BACKUP_DIR}/avatar.jpg" "${THEME_DIR}/assets/avatar.jpg"
+    # Ensure autoColor feature is present in older configs
+    if ! grep -q "^autoColor=" "${THEME_DIR}/theme.conf"; then
+        sed -i '/^accentColor=/a autoColor=true' "${THEME_DIR}/theme.conf"
+    fi
 fi
 
 rm -rf "${BACKUP_DIR}"
