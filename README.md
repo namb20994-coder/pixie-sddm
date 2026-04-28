@@ -115,7 +115,7 @@ Add the following to your `configuration.nix`. (Change `rev = "main"` to `rev = 
         owner = "xCaptaiN09";
         repo = "pixie-sddm";
         rev = "main";
-        sha256 = "sha256-0000000000000000000000000000000000000000000=";
+        hash = pkgs.lib.fakeHash;
       };
       installPhase = "
         mkdir -p $out/share/sddm/themes/pixie
@@ -157,12 +157,16 @@ sddm-greeter --test-mode --theme /usr/share/sddm/themes/pixie
 Edit `theme.conf` or replace assets in `assets/`:
 - **Wallpaper:** Replace `assets/background.jpg`.
 - **Avatar:** Replace `assets/avatar.jpg`.
+- **Dynamic Colors:**
+  - `autoColor=true` (Default): Automatically extracts a Material You accent color from your wallpaper.
+  - `autoColor=false`: Disables extraction and strictly uses the `accentColor` you set in `theme.conf`.
+- **Background Colors:** Change `backgroundColor` in `theme.conf`. The login card, input fields, and borders will automatically generate lighter variants to match.
 
 ## 🤝 Credits
 
 - **Author:** [xCaptaiN09](https://github.com/xCaptaiN09)
 - **Design:** Inspired by Google Pixel and MD3.
-- **Font:** Google Sans Flex (included).
+- **Font:** Flex Rounded (included).
 
 ---
 *Made with ❤️ for the Linux community.*

@@ -14,7 +14,7 @@ Item {
 
     property color defaultMinutesColor: "#D4E4BC"
 
-    property string fontFamily: "Google Sans Flex Freeze"
+    property string fontFamily: clock.fontFamily
 
     property color baseAccent: config.accentColor
 
@@ -26,6 +26,14 @@ Item {
 
     function updateColors() {
         var base = clock.baseAccent;
+
+        // Monochrome / Grey accent logic (For black/white wallpapers)
+        if (base.hsvSaturation < 0.15) {
+            // Use lighter/darker to create a two-tone grey effect
+            clock.smartHoursColor = Qt.lighter(base, 1.3);
+            clock.smartMinutesColor = Qt.darker(base, 1.4);
+            return;
+        }
 
         // "Better than Pixel" Smart Visibility Logic:
         // Since the clock sits directly on the wallpaper, we must guarantee contrast.
@@ -49,22 +57,20 @@ Item {
 
     Row {
         anchors.centerIn: parent
-        spacing: 0 
+        spacing: 0
 
         Column {
-            spacing: -130 
+            spacing: -130
             Text {
                 text: clock.timeStr.charAt(0)
                 color: clock.smartHoursColor
                 font.pixelSize: 200
                 font.family: clock.fontFamily
                 font.weight: Font.Medium
-                width: 130 
+                width: 130
                 horizontalAlignment: Text.AlignHCenter
                 antialiasing: true
                 // Anti-blend safety: Soft halo guarantees clock is ALWAYS visible over any wallpaper
-                style: Text.Outline
-                styleColor: Qt.rgba(0, 0, 0, 0.25)
             }
             Text {
                 text: clock.timeStr.charAt(2)
@@ -75,8 +81,6 @@ Item {
                 width: 130
                 horizontalAlignment: Text.AlignHCenter
                 antialiasing: true
-                style: Text.Outline
-                styleColor: Qt.rgba(0, 0, 0, 0.25)
             }
         }
 
@@ -91,8 +95,6 @@ Item {
                 width: 130
                 horizontalAlignment: Text.AlignHCenter
                 antialiasing: true
-                style: Text.Outline
-                styleColor: Qt.rgba(0, 0, 0, 0.25)
             }
             Text {
                 text: clock.timeStr.charAt(3)
@@ -103,8 +105,6 @@ Item {
                 width: 130
                 horizontalAlignment: Text.AlignHCenter
                 antialiasing: true
-                style: Text.Outline
-                styleColor: Qt.rgba(0, 0, 0, 0.25)
             }
         }
     }

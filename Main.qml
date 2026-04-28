@@ -104,6 +104,7 @@ Rectangle {
     property color baseColor: config.backgroundColor
     property color surfaceColor: Qt.lighter(baseColor, 1.3)
     property color surfaceVariantColor: Qt.lighter(baseColor, 1.6)
+    property bool uiReady: config.autoColor !== "true" || colorExtractor.processed
 
     Timer {
         id: colorDelay
@@ -120,6 +121,7 @@ Rectangle {
         z: -1
         renderTarget: Canvas.Image
         property bool processed: false
+        property int retries: 0 // Add this to track GPU sync delays
 
         onPaint: {
             var ctx = getContext("2d");
@@ -135,6 +137,24 @@ Rectangle {
             var sampleColors = new Array(36).fill(null);
             var vibrantFound = false;
 
+            // FIX: Check if canvas read pure black (GPU sync delay bug)
+            var pixelSum = 0;
+            for (var p = 0; p < imgData.length; p++) pixelSum += imgData[p];
+
+            if (pixelSum === 0) {
+                retries++;
+                if (retries > 3) {
+                    // If it's still pure black after 3 tries, it's a true black wallpaper
+                    container.extractedAccent = "#D0D0D0";
+                    console.log("Pixie SDDM: Pure black wallpaper detected. Using neutral contrast.");
+                    processed = true;
+                }
+                return; // Keep trying if it's just a GPU delay
+            }
+
+            // Reset retries if we got pixels
+            retries = 0;
+
             for (var i = 0; i < imgData.length; i += 4) {
                 var r = imgData[i] / 255;
                 var g = imgData[i+1] / 255;
@@ -142,12 +162,11 @@ Rectangle {
                 var pCol = Qt.rgba(r, g, b, 1.0);
 
                 // Filter: Must be colorful and not too dark
-                if (pCol.hsvSaturation > 0.3 && pCol.hsvValue > 0.25) {
+                if (pCol.hsvSaturation > 0.3 && pCol.hsvValue > 0.15) {
                     var h = pCol.hsvHue * 360;
                     if (h < 0) continue;
 
                     var bIdx = Math.floor(h / 10) % 36;
-                    // Weight: Focus on saturation to find the "intended" accent
                     var weight = pCol.hsvSaturation * pCol.hsvValue;
                     histogram[bIdx] += weight;
 
@@ -158,7 +177,23 @@ Rectangle {
                 }
             }
 
-            if (!vibrantFound) return; // Keep trying
+            if (!vibrantFound) {
+                // Calculate average brightness for monochrome wallpapers (greys/whites)
+                var totalBrightness = 0;
+                var pixelCount = imgData.length / 4;
+                for (var k = 0; k < imgData.length; k += 4) {
+                    var r_l = imgData[k] / 255;
+                    var g_l = imgData[k+1] / 255;
+                    var b_l = imgData[k+2] / 255;
+                    totalBrightness += (0.299 * r_l + 0.587 * g_l + 0.114 * b_l);
+                }
+                var avgBrightness = totalBrightness / pixelCount;
+
+                container.extractedAccent = avgBrightness < 0.5 ? "#D0D0D0" : "#404040";
+                console.log("Pixie SDDM: No vibrant colors. Avg brightness: " + avgBrightness.toFixed(2) + ". Using neutral contrast.");
+                processed = true;
+                return;
+            }
 
             // Merge Red wrap (350-360 and 0-10)
             histogram[0] += histogram[35];
@@ -176,11 +211,10 @@ Rectangle {
             if (winnerIdx !== -1 && sampleColors[winnerIdx]) {
                 var finalColor = sampleColors[winnerIdx];
                 var h = finalColor.hsvHue;
-                // Slightly decreased saturation for a more professional look
                 var s = Math.max(0.35, Math.min(0.55, finalColor.hsvSaturation * 0.9));
                 container.extractedAccent = Qt.hsva(h, s, 0.95, 1.0);
                 console.log("Pixie SDDM: SUCCESS! Extracted Hue: " + (h * 360).toFixed(0) + "°");
-                processed = true; // Stop the timer
+                processed = true;
             }
         }
     }
@@ -262,7 +296,7 @@ Rectangle {
         text: Qt.formatDateTime(new Date(), "dddd, MMMM d")
         color: container.extractedAccent
         font.pixelSize: 22
-        font.family: config.fontFamily
+        font.family: fontRegular.name
         anchors {
             top: parent.top
             left: parent.left
@@ -285,7 +319,7 @@ Rectangle {
             anchors.centerIn: parent
             backgroundSource: config.background
             baseAccent: container.extractedAccent
-            fontFamily: config.fontFamily
+            fontFamily: fontRegular.name
             opacity: colorExtractor.processed ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 300 } }
         }
@@ -466,7 +500,7 @@ Rectangle {
                         color: "white"
                         font.pixelSize: 24
                         font.weight: Font.Bold
-                        font.family: config.fontFamily
+                        font.family: fontRegular.name
                     }
 
                     MouseArea {
@@ -563,7 +597,7 @@ Rectangle {
                     text: "Num Lock is on"
                     color: container.extractedAccent
                     font.pixelSize: 14
-                    font.family: config.fontFamily
+                    font.family: fontRegular.name
                     font.weight: Font.Medium
                     Layout.alignment: Qt.AlignHCenter
                     visible: {
@@ -699,7 +733,7 @@ Rectangle {
                         }
                         color: isCurrent ? "white" : (hovered ? "#DDDDDD" : "#AAAAAA")
                         font.pixelSize: 15
-                        font.family: config.fontFamily
+                        font.family: fontRegular.name
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                         rightPadding: 60
@@ -786,7 +820,7 @@ Rectangle {
                         }
                         color: isCurrent ? "white" : "#AAAAAA"
                         font.pixelSize: 14
-                        font.family: config.fontFamily
+                        font.family: fontRegular.name
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                         rightPadding: 60
