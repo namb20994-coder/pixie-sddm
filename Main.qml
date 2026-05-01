@@ -370,14 +370,19 @@ Rectangle {
         Rectangle {
             id: loginCard
             width: 380
-            height: 480
+            // Dynamic height: Expands smoothly when NumLock text appears
+            height: 480 + (numLockIndicator.visible ? 40 : 0)
             x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
+            y: (parent.height - 480) / 2
             color: loginState.isError ? "#442222" : baseColor
             opacity: 0.7
             radius: 32
 
             Behavior on color { ColorAnimation { duration: 200 } }
+            // Beautiful MD3 bounce/jiggle animation when card resizes
+            Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.InOutQuad } }
+            // Also animate Y position so it stays perfectly centered when height changes
+            Behavior on y { NumberAnimation { duration: 300; easing.type: Easing.OutBack } }
 
             ColumnLayout {
                 anchors.fill: parent
@@ -560,10 +565,9 @@ Rectangle {
                     }
                 }
 
-                Item { Layout.fillHeight: true }
-
                 TextField {
                     id: passwordField
+                    Layout.topMargin: 30 // Keeps space above it static
                     echoMode: TextInput.Password
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
@@ -608,8 +612,6 @@ Rectangle {
                     Behavior on opacity { NumberAnimation { duration: 200 } }
                 }
 
-                Item { Layout.fillHeight: true }
-
                 RoundButton {
                     id: loginButton
                     Layout.alignment: Qt.AlignHCenter
@@ -636,6 +638,8 @@ Rectangle {
                         container.doLogin();
                     }
                 }
+
+                Item { Layout.fillHeight: true } // ADD THIS LINE HERE AT THE BOTTOM
             }
         }
     }
