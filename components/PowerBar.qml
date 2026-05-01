@@ -11,14 +11,13 @@ Row {
 
     property color textColor: "white"
 
-    // Load the icon font locally so we don't need system-wide installation
     FontLoader { id: iconFont; source: "../assets/fonts/MaterialDesignIcons.ttf" }
 
-    // Battery
+    // Battery (With forced live updates)
     Row {
         id: batteryRow
         spacing: 5
-        visible: typeof battery !== "undefined" && battery.percent !== undefined
+        visible: typeof battery !== "undefined" && typeof battery.percent !== "undefined"
         anchors.verticalCenter: parent.verticalCenter
 
         Text {
@@ -30,11 +29,24 @@ Row {
             anchors.verticalCenter: parent.verticalCenter
         }
         Text {
+            id: batteryIcon
             text: (typeof battery !== "undefined" && battery.charging) ? "󱐋" : "󰁹"
             color: textColor
             font.pixelSize: 18
-            font.family: iconFont.name // Apply the loaded font here!
+            font.family: iconFont.name
             anchors.verticalCenter: parent.verticalCenter
+        }
+
+        // Bulletproof Live Update: SDDM sometimes fails to emit battery signals,
+        // so we force a check every 5 seconds.
+        Timer {
+            interval: 5000
+            running: typeof battery !== "undefined" && battery.present
+            repeat: true
+            onTriggered: {
+                batteryText.text = battery.percent + "%"
+                batteryIcon.text = battery.charging ? "󱐋" : "󰁹"
+            }
         }
     }
 
@@ -60,7 +72,7 @@ Row {
         text: "󰤄"
         color: textColor
         font.pixelSize: 20
-        font.family: iconFont.name // Apply the loaded font here!
+        font.family: iconFont.name
         anchors.verticalCenter: parent.verticalCenter
         MouseArea {
             anchors.fill: parent
@@ -73,7 +85,7 @@ Row {
         text: "󰑐"
         color: textColor
         font.pixelSize: 20
-        font.family: iconFont.name // Apply the loaded font here!
+        font.family: iconFont.name
         anchors.verticalCenter: parent.verticalCenter
         MouseArea {
             anchors.fill: parent
@@ -86,7 +98,7 @@ Row {
         text: "󰐥"
         color: textColor
         font.pixelSize: 20
-        font.family: iconFont.name // Apply the loaded font here!
+        font.family: iconFont.name
         anchors.verticalCenter: parent.verticalCenter
         MouseArea {
             anchors.fill: parent

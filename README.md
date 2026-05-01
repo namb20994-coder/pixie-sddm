@@ -161,6 +161,7 @@ Edit `theme.conf` or replace assets in `assets/`:
   - `autoColor=true` (Default): Automatically extracts a Material You accent color from your wallpaper.
   - `autoColor=false`: Disables extraction and strictly uses the `accentColor` you set in `theme.conf`.
 - **Background Colors:** Change `backgroundColor` in `theme.conf`. The login card, input fields, and borders will automatically generate lighter variants to match.
+- **Clock Format:** Set `use24HourClock=false` in `theme.conf` to switch to a 12-hour clock, or `use24HourClock=true` for 24-hour.
 
 ## 🤝 Credits
 

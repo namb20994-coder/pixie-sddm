@@ -82,6 +82,10 @@ if [ -f "${BACKUP_DIR}/theme.conf" ]; then
     if ! grep -q "^autoColor=" "${THEME_DIR}/theme.conf"; then
         sed -i '/^accentColor=/a autoColor=true' "${THEME_DIR}/theme.conf"
     fi
+    # Ensure use24HourClock feature is present in older configs
+    if ! grep -q "^use24HourClock=" "${THEME_DIR}/theme.conf"; then
+        sed -i '/^autoColor=/a use24HourClock=true' "${THEME_DIR}/theme.conf"
+    fi
 fi
 
 rm -rf "${BACKUP_DIR}"
