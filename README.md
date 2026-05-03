@@ -87,10 +87,69 @@ The AUR package automatically tracks the latest modern version:
 yay -S pixie-sddm-git
 ```
 
-### Method C: NixOS (Declarative)
-Add the following to your `configuration.nix`. (Change `rev = "main"` to `rev = "qt5"` for legacy systems).
+### Method C: NixOS (Flake)
+The most modern and flexible way to install.
 
-> **Note for Qt6:** If you are using the `main` (Qt6) branch, you **must** use `pkgs.kdePackages.sddm` to ensure the Qt6 platform plugins load correctly. Without this, your mouse cursor may not appear.
+1. In your **`flake.nix`**, add the input and pass it to your modules:
+```nix
+{
+  inputs.pixie-sddm.url = "github:xCaptaiN09/pixie-sddm";
+
+  outputs = { self, nixpkgs, pixie-sddm, ... }@inputs: {
+    nixosConfigurations.YOUR_HOSTNAME = nixpkgs.lib.nixosSystem {
+      specialArgs = { inherit inputs; }; # Passes inputs to all modules
+      modules = [ ./configuration.nix ];
+    };
+  };
+}
+```
+
+2. In your **`configuration.nix`**, configure SDDM and apply the theme:
+```nix
+{ pkgs, inputs, ... }: {
+  services.displayManager.sddm = {
+    enable = true;
+    theme = "pixie";
+    wayland.enable = true; # Optional: for Wayland sessions
+
+    # Crucial for Qt6: Use the KDE/Qt6 build of SDDM to fix missing
+    # cursors and module errors.
+    package = pkgs.kdePackages.sddm;
+
+    # Required dependencies for Qt6 themes
+    extraPackages = [
+      pkgs.kdePackages.qtsvg
+      pkgs.kdePackages.qtdeclarative
+      pkgs.kdePackages.qt5compat
+    ];
+  };
+
+  environment.systemPackages = [
+    # Install and customize the theme. All fields are optional and will
+    # fall back to theme defaults if not set.
+    (inputs.pixie-sddm.packages.${pkgs.stdenv.hostPlatform.system}.pixie-sddm.override {
+      background = ./my-background.jpg; # Nix path or absolute path
+      avatar = ./my-avatar.jpg;         # Nix path or absolute path
+      primaryColor = "#B3C8FF";         # Hex color code
+      accentColor = "#3F5F91";          # Hex color code
+      autoColor = true;                 # true/false
+      backgroundColor = "#1A1C1E";      # Hex color code
+      textColor = "#E2E2E6";            # Hex color code
+      fontFamily = "JetBrains Mono";    # Font family name
+      fontSize = 13;                    # Font size in px
+    })
+  ];
+}
+```
+
+### Method D: NixOS (Legacy / Non-Flake)
+Add the following to your `configuration.nix`. (Change `rev = "main"` to
+`rev = "qt5"` for legacy systems).
+
+> [!NOTE]
+> For Qt6: If you are using the `main` (Qt6) branch, you **must** use
+> `pkgs.kdePackages.sddm` to ensure the Qt6 platform plugins load
+> correctly. Without this, your mouse cursor may not appear.
 
 ```nix
 { pkgs, ... }: {
@@ -98,8 +157,8 @@ Add the following to your `configuration.nix`. (Change `rev = "main"` to `rev = 
     enable = true;
     theme = "pixie";
     # Crucial for Qt6: Use the KDE/Qt6 build of SDDM to fix missing cursors and module errors
-    package = pkgs.kdePackages.sddm; 
-    
+    package = pkgs.kdePackages.sddm;
+
     # Fix for NixOS explicitly requiring a cursor theme
     settings = {
       Theme = {
@@ -130,7 +189,7 @@ Add the following to your `configuration.nix`. (Change `rev = "main"` to `rev = 
 }
 ```
 
-### Method D: Manual
+### Method E: Manual
 1. Copy the folder to SDDM themes directory:
    `sudo cp -r pixie-sddm /usr/share/sddm/themes/pixie`
 2. Set the theme in `/etc/sddm.conf`:
