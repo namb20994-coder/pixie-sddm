@@ -87,14 +87,84 @@ The AUR package automatically tracks the latest modern version:
 yay -S pixie-sddm-git
 ```
 
-### Method C: NixOS (Declarative)
-Add the following to your `configuration.nix`. (Change `rev = "main"` to `rev = "qt5"` for legacy systems).
+### Method C: NixOS (Flake)
+The most modern and flexible way to install.
+
+1. In your **`flake.nix`**, add the input and pass it to your modules:
+```nix
+{
+  inputs.pixie-sddm.url = "github:xCaptaiN09/pixie-sddm";
+
+  outputs = { self, nixpkgs, pixie-sddm, ... }@inputs: {
+    nixosConfigurations.YOUR_HOSTNAME = nixpkgs.lib.nixosSystem {
+      specialArgs = { inherit inputs; }; # Passes inputs to all modules
+      modules = [ ./configuration.nix ];
+    };
+  };
+}
+```
+
+2. In your **`configuration.nix`**, configure SDDM and apply the theme:
+```nix
+{ pkgs, inputs, ... }: {
+  services.displayManager.sddm = {
+    enable = true;
+    theme = "pixie";
+    wayland.enable = true; # Optional: for Wayland sessions
+
+    # Crucial for Qt6: Use the KDE/Qt6 build of SDDM to fix missing
+    # cursors and module errors.
+    package = pkgs.kdePackages.sddm;
+
+    # Required dependencies for Qt6 themes
+    extraPackages = [
+      pkgs.kdePackages.qtsvg
+      pkgs.kdePackages.qtdeclarative
+      pkgs.kdePackages.qt5compat
+    ];
+  };
+
+  environment.systemPackages = [
+    # Install and customize the theme. All fields are optional and will
+    # fall back to theme defaults if not set.
+    (inputs.pixie-sddm.packages.${pkgs.stdenv.hostPlatform.system}.pixie-sddm.override {
+      background = ./my-background.jpg; # Nix path or absolute path
+      avatar = ./my-avatar.jpg;         # Nix path or absolute path
+      primaryColor = "#B3C8FF";         # Hex color code
+      accentColor = "#3F5F91";          # Hex color code
+      autoColor = true;                 # true/false
+      backgroundColor = "#1A1C1E";      # Hex color code
+      textColor = "#E2E2E6";            # Hex color code
+      fontFamily = "JetBrains Mono";    # Font family name
+      fontSize = 13;                    # Font size in px
+    })
+  ];
+}
+```
+
+### Method D: NixOS (Legacy / Non-Flake)
+Add the following to your `configuration.nix`. (Change `rev = "main"` to
+`rev = "qt5"` for legacy systems).
+
+> [!NOTE]
+> For Qt6: If you are using the `main` (Qt6) branch, you **must** use
+> `pkgs.kdePackages.sddm` to ensure the Qt6 platform plugins load
+> correctly. Without this, your mouse cursor may not appear.
 
 ```nix
 { pkgs, ... }: {
   services.displayManager.sddm = {
     enable = true;
     theme = "pixie";
+    # Crucial for Qt6: Use the KDE/Qt6 build of SDDM to fix missing cursors and module errors
+    package = pkgs.kdePackages.sddm;
+
+    # Fix for NixOS explicitly requiring a cursor theme
+    settings = {
+      Theme = {
+        CursorTheme = "breeze_cursors"; # Change this if you use a different cursor theme (e.g., Adwaita)
+      };
+    };
   };
 
   environment.systemPackages = [
@@ -104,22 +174,22 @@ Add the following to your `configuration.nix`. (Change `rev = "main"` to `rev = 
         owner = "xCaptaiN09";
         repo = "pixie-sddm";
         rev = "main";
-        sha256 = "sha256-0000000000000000000000000000000000000000000=";
+        hash = pkgs.lib.fakeHash;
       };
-      installPhase = ''
+      installPhase = "
         mkdir -p $out/share/sddm/themes/pixie
         cp -r * $out/share/sddm/themes/pixie/
-      '';
+      ";
     })
+    # Correct Qt6 dependencies for NixOS
     pkgs.kdePackages.qtdeclarative
-    pkgs.kdePackages.qtquickcontrols2
     pkgs.kdePackages.qtsvg
-    pkgs.kdePackages.qteffects
+    pkgs.kdePackages.qt5compat # Included for wider QML component compatibility
   ];
 }
 ```
 
-### Method D: Manual
+### Method E: Manual
 1. Copy the folder to SDDM themes directory:
    `sudo cp -r pixie-sddm /usr/share/sddm/themes/pixie`
 2. Set the theme in `/etc/sddm.conf`:
@@ -146,6 +216,11 @@ sddm-greeter --test-mode --theme /usr/share/sddm/themes/pixie
 Edit `theme.conf` or replace assets in `assets/`:
 - **Wallpaper:** Replace `assets/background.jpg`.
 - **Avatar:** Replace `assets/avatar.jpg`.
+- **Dynamic Colors:**
+  - `autoColor=true` (Default): Automatically extracts a Material You accent color from your wallpaper.
+  - `autoColor=false`: Disables extraction and strictly uses the `accentColor` you set in `theme.conf`.
+- **Background Colors:** Change `backgroundColor` in `theme.conf`. The login card, input fields, and borders will automatically generate lighter variants to match.
+- **Clock Format:** Set `use24HourClock=false` in `theme.conf` to switch to a 12-hour clock, or `use24HourClock=true` for 24-hour.
 
 ## 🤝 Credits
 
